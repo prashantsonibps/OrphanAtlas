@@ -10,7 +10,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # Path to the local Excel file
-file_path = "/Users/prashantsoni/Downloads/symposiumfile.xlsx"
+file_path = "symposiumfile.xlsx"
 
 # Global variable to store fetched data
 fetched_data = {}
