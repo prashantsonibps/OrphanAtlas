@@ -16,7 +16,7 @@ file_path = "symposiumfile.xlsx"
 fetched_data = {}
 
 # OpenRouter API configuration for DeepSeek
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 deepseek_client = OpenAI(api_key=OPENROUTER_API_KEY, base_url="https://openrouter.ai/api/v1")
 
 def clean_text(text):
