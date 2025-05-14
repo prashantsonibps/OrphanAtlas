@@ -9,14 +9,14 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Path to the local Excel file
-file_path = "symposiumfile.xlsx"
+# Path to the Excel file (relative path for deployment)
+file_path = os.path.join(os.path.dirname(__file__), "symposiumfile.xlsx")
 
 # Global variable to store fetched data
 fetched_data = {}
 
 # OpenRouter API configuration for DeepSeek
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
 deepseek_client = OpenAI(api_key=OPENROUTER_API_KEY, base_url="https://openrouter.ai/api/v1")
 
 def clean_text(text):
@@ -66,38 +66,26 @@ def truncate_text(text, max_length=100):
         return text[:max_length].rsplit(' ', 1)[0] + "..."
     return text
 
-def fetch_diseases():
-    """Load data from all sheets into a dictionary."""
+def load_sheet(sheet_name):
+    """Load a specific sheet into fetched_data if not already loaded."""
     global fetched_data
-    sheets_to_load = [
-        "Prevalence",
-        "Publications",
-        "Classification",
-        "Symptoms",
-        "Inheritance",
-        "Genetic Variation",
-        "Approved Treatments",
-        "Biopharma Pipeline",
-    ]
-
-    for sheet in sheets_to_load:
+    if sheet_name not in fetched_data:
         try:
-            print(f"Loading sheet: {sheet}")
-            data = pd.read_excel(file_path, sheet_name=sheet)
+            print(f"Loading sheet: {sheet_name}")
+            data = pd.read_excel(file_path, sheet_name=sheet_name)
             data.fillna("No details available", inplace=True)
-            print(f"Columns in {sheet}: {list(data.columns)}")
-            fetched_data[sheet] = data
-            print(f"Loaded {len(data)} rows from {sheet}.")
+            print(f"Columns in {sheet_name}: {list(data.columns)}")
+            fetched_data[sheet_name] = data
+            print(f"Loaded {len(data)} rows from {sheet_name}.")
         except Exception as e:
-            print(f"Error loading sheet '{sheet}': {e}")
+            print(f"Error loading sheet '{sheet_name}': {e}")
+            fetched_data[sheet_name] = pd.DataFrame()  # Empty DataFrame on failure
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     """Render the search page for disease names."""
     global fetched_data
-    if not fetched_data:
-        fetch_diseases()
-
+    # Don't load all sheets at startup; load on-demand in other routes
     all_diseases = set()
     for sheet in fetched_data.values():
         if 'Disease' in sheet.columns:
@@ -112,15 +100,22 @@ def index():
 
 @app.route("/search/<path:query>", methods=["GET"])
 def search(query):
-    global fetched_data
     query = query.replace("%20", " ").replace("%0A", "\n").strip()
-    sheets = list(fetched_data.keys())  # e.g., ["Prevalence", "Publications", ...]
+    sheets = [
+        "Prevalence",
+        "Publications",
+        "Classification",
+        "Symptoms",
+        "Inheritance",
+        "Genetic Variation",
+        "Approved Treatments",
+        "Biopharma Pipeline",
+    ]
     # Insert "Geographic Spread" after "Prevalence"
     try:
         prevalence_index = sheets.index("Prevalence")
         sheets.insert(prevalence_index + 1, "Geographic Spread")
     except ValueError:
-        # If "Prevalence" is not found, append "Geographic Spread" at the end
         sheets.append("Geographic Spread")
     # Append "AI Generated Data" at the end
     sheets.append("AI Generated Data")
@@ -140,7 +135,11 @@ def search_suggestions():
         if 'Disease' in sheet.columns:
             all_diseases.update(sheet['Disease'].dropna().unique())
 
-    # Match diseases starting with the query
+    # Load Prevalence sheet if no diseases are found yet
+    if not all_diseases:
+        load_sheet("Prevalence")
+        all_diseases.update(fetched_data.get("Prevalence", pd.DataFrame()).get("Disease", []).dropna().unique())
+
     matching_diseases = sorted([d for d in all_diseases if str(d).lower().startswith(query)])
     return jsonify(matching_diseases[:10])
 
@@ -152,21 +151,41 @@ def get_diseases():
     reverse_order = request.args.get("reverse", "false").lower() == "true"
 
     if disease_type == "alphabetical":
+        load_sheet("Prevalence")
         diseases = sorted(fetched_data.get("Prevalence", pd.DataFrame()).get("Disease", []).dropna().unique())
         return jsonify({"diseases": diseases})
     elif disease_type == "prevalence":
-        # Fetch the Prevalence sheet and return Disease and Estimated prevalence(/100,000)
+        load_sheet("Prevalence")
         prevalence_df = fetched_data.get("Prevalence", pd.DataFrame())
-        if "Disease" not in prevalence_df.columns or "Estimated prevalence(/100,000)" not in prevalence_df.columns:
-            return jsonify({"error": "Required columns not found in Prevalence sheet"}), 400
-        # Select only the Disease and Estimated prevalence(/100,000) columns
-        prevalence_data = prevalence_df[["Disease", "Estimated prevalence(/100,000)"]].dropna(subset=["Disease"])
-        # Convert to list of dictionaries
+        print(f"Available sheets: {list(fetched_data.keys())}")
+        print(f"Columns in Prevalence sheet: {list(prevalence_df.columns)}")
+        columns = [col.strip().lower() for col in prevalence_df.columns]
+        expected_disease_col = "disease".lower()
+        expected_prevalence_col = "estimated prevalence(/100,000)".lower()
+        disease_col = None
+        prevalence_col = None
+        for col in prevalence_df.columns:
+            normalized_col = col.strip().lower()
+            if normalized_col == expected_disease_col:
+                disease_col = col
+            if normalized_col == expected_prevalence_col:
+                prevalence_col = col
+        if not disease_col or not prevalence_col:
+            missing_cols = []
+            if not disease_col:
+                missing_cols.append("Disease")
+            if not prevalence_col:
+                missing_cols.append("Estimated prevalence(/100,000)")
+            error_msg = f"Required columns not found in Prevalence sheet: {', '.join(missing_cols)}. Available columns: {list(prevalence_df.columns)}"
+            print(error_msg)
+            return jsonify({"error": error_msg}), 400
+        prevalence_data = prevalence_df[[disease_col, prevalence_col]].dropna(subset=[disease_col])
         diseases = prevalence_data.to_dict('records')
         if reverse_order:
             diseases.reverse()
         return jsonify({"diseases": diseases})
     elif disease_type == "sheet_order":
+        load_sheet("Prevalence")
         diseases = fetched_data.get("Prevalence", pd.DataFrame()).get("Disease", []).dropna().tolist()
         if reverse_order:
             diseases.reverse()
@@ -204,19 +223,19 @@ def fetch_data():
         except Exception as e:
             return jsonify({"error": f"Failed to generate data: {str(e)}"}), 500
 
-    elif sheet_name in fetched_data:
+    elif sheet_name in ["Prevalence", "Publications", "Classification", "Symptoms", "Inheritance", "Genetic Variation", "Approved Treatments", "Biopharma Pipeline"]:
+        # Load the requested sheet on-demand
+        load_sheet(sheet_name)
         data = fetched_data[sheet_name]
         if "Disease" in data.columns:
             filtered = data[data["Disease"].str.lower().replace("\n", " ") == query]
             results = filtered.to_dict(orient="records")
             if not results:
                 return jsonify({"error": "No matching records found for this disease."}), 404
-            # Exclude specific column for Publications sheet
             if sheet_name == "Publications":
                 for result in results:
                     if "Number of Approximate Publications in Last Five Years (Searching in Title/Abstract on Pubmed)" in result:
                         del result["Number of Approximate Publications in Last Five Years (Searching in Title/Abstract on Pubmed)"]
-            # Add note for Inheritance sheet
             if sheet_name == "Inheritance":
                 results.append({
                     "NOTE": "Not applicable is used for diseases that are not inherited. "
@@ -226,14 +245,11 @@ def fetch_data():
                 })
             if sheet_name == "Prevalence":
                 results.append({"NOTE": "Without specification published figures are worldwide | An asterisk * indicates European data | BP indicates birth prevalence."})
-
-            # Format URLs as "Click Link" for specific sheets
             if sheet_name in ["Biopharma Pipeline", "Publications", "Approved Treatments"]:
                 for result in results:
                     for key, value in result.items():
                         if isinstance(value, str):
                             result[key] = format_urls_to_click_links(value)
-
             return jsonify({"sheet": sheet_name, "data": results})
         elif sheet_name == "Classification":
             results = []
@@ -293,7 +309,7 @@ def download_pdf(query):
     
     # Initialize PDF with hospital report formatting
     pdf = FPDF()
-    pdf.set_margins(left=10, top=10, right=10)  # Reduced margins to fit more content
+    pdf.set_margins(left=10, top=10, right=10)
     pdf.set_auto_page_break(auto=True, margin=10)
     pdf.add_page()
 
@@ -318,7 +334,6 @@ def download_pdf(query):
     sheets_to_include = list(fetched_data.keys())
 
     for sheet_name in sheets_to_include:
-        # Correct typo in sheet name comparison
         if sheet_name == "Publications":
             display_name = "Publications"
         else:
@@ -338,20 +353,20 @@ def download_pdf(query):
                              if key != data.columns[0] 
                              and pd.notna(value) 
                              and value != "No details available"]
-                if categories:  # Only include if there are meaningful categories
+                if categories:
                     results.append(categories)
         else:
             continue
 
         if not results:
-            continue  # Skip sections with no data
+            continue
 
         # Section header
-        pdf.set_font("Arial", "B", 10)  # Smaller font for section headings
+        pdf.set_font("Arial", "B", 10)
         pdf.cell(0, 6, f"{display_name}:", ln=True)
         pdf.ln(2)
 
-        pdf.set_font("Arial", "", 8)  # Smaller font for body text
+        pdf.set_font("Arial", "", 8)
         if sheet_name == "Classification":
             for categories in results:
                 categories_str = ", ".join(categories) if categories else "N/A"
@@ -360,7 +375,6 @@ def download_pdf(query):
         else:
             for result in results:
                 has_data = False
-                # For Biopharma Pipeline, treat each entry as a continuous list without "Unnamed" labels
                 if sheet_name == "Biopharma Pipeline":
                     entries = []
                     for col, val in result.items():
@@ -369,7 +383,6 @@ def download_pdf(query):
                         val = clean_text(str(val))
                         val = format_text_for_pdf(val)
                         entries.append((col, val))
-                    # Process unnamed columns as a continuous list
                     unnamed_entries = []
                     for col, val in result.items():
                         if col.startswith("Unnamed"):
@@ -385,9 +398,7 @@ def download_pdf(query):
                         for entry in unnamed_entries:
                             urls = extract_urls(entry)
                             if urls:
-                                # If there are URLs, replace them with "Click Link" labels
                                 if len(urls) == 1:
-                                    # Single URL: "Click Link"
                                     entry = re.sub(r'https?:\/\/\S+', '', entry).strip()
                                     entry = truncate_text(entry, max_length=100)
                                     if entry:
@@ -396,7 +407,6 @@ def download_pdf(query):
                                     pdf.cell(0, 4, "Click Link", ln=True, link=urls[0])
                                     pdf.set_text_color(0, 0, 0)
                                 else:
-                                    # Multiple URLs: "Click Link1", "Click Link2", etc.
                                     entry = re.sub(r'https?:\/\/\S+', '', entry).strip()
                                     entry = truncate_text(entry, max_length=100)
                                     if entry:
@@ -409,11 +419,9 @@ def download_pdf(query):
                                 entry = truncate_text(entry, max_length=100)
                                 pdf.multi_cell(0, 4, entry if entry else "N/A")
                 else:
-                    # Handle other sections
                     for col, val in result.items():
                         if col == "Disease" or pd.isna(val) or val == "No details available" or col == "NOTE":
                             continue
-                        # Skip sections with only URLs and no other meaningful data
                         if sheet_name in ["Publications", "Approved Treatments"]:
                             urls = extract_urls(str(val))
                             if urls and not re.sub(r'https?:\/\/\S+', '', str(val)).strip():
@@ -421,13 +429,10 @@ def download_pdf(query):
                         has_data = True
                         val = clean_text(str(val))
                         val = format_text_for_pdf(val)
-                        # Special handling for sections with URLs
                         if sheet_name in ["Publications", "Approved Treatments"]:
                             urls = extract_urls(val)
                             if urls:
-                                # If there are URLs, replace them with "Click Link" labels
                                 if len(urls) == 1:
-                                    # Single URL: "Click Link"
                                     val = re.sub(r'https?:\/\/\S+', '', val).strip()
                                     pdf.cell(30, 4, f"{col}: ", ln=False)
                                     if val:
@@ -436,7 +441,6 @@ def download_pdf(query):
                                     pdf.cell(0, 4, "Click Link", ln=True, link=urls[0])
                                     pdf.set_text_color(0, 0, 0)
                                 else:
-                                    # Multiple URLs: "Click Link1", "Click Link2", etc.
                                     val = re.sub(r'https?:\/\/\S+', '', val).strip()
                                     pdf.cell(30, 4, f"{col}: ", ln=False)
                                     if val:
@@ -446,12 +450,10 @@ def download_pdf(query):
                                         pdf.cell(0, 4, f"Click Link{i}" + (" " if i < len(urls) else ""), ln=(i == len(urls)), link=url)
                                     pdf.set_text_color(0, 0, 0)
                             else:
-                                # No URLs, render as normal
                                 val = truncate_text(val, max_length=100)
                                 pdf.cell(30, 4, f"{col}: ", ln=False)
                                 pdf.multi_cell(0, 4, val if val else "N/A")
                         else:
-                            # Special handling for prevalence to format numbers
                             if col == "Estimated prevalence(/100,000)":
                                 try:
                                     val = "{:,.2f}".format(float(val.replace(",", "")))
@@ -462,7 +464,6 @@ def download_pdf(query):
                 if has_data:
                     pdf.ln(2)
 
-            # Add notes if applicable
             if sheet_name == "Prevalence":
                 pdf.set_font("Arial", "I", 7)
                 pdf.multi_cell(0, 4, "Note: Without specification, published figures are worldwide | An asterisk * indicates European data | BP indicates birth prevalence.")
@@ -492,7 +493,6 @@ def ask_bot():
     if not user_query:
         return jsonify({"answer": "Please ask something about a rare disease."})
 
-    # Check for "I'm really chatting with a person" query
     if user_query.lower().strip() in ["i'm really chatting with a person", "im really chatting with a person", "am i chatting with a person"]:
         response_text = """
 I'm glad you feel that way! I'm OrphanAtlas Assistant, an AI designed to chat with you in a friendly and helpful way. I aim to make our conversation feel as natural as possible while providing you with accurate information about rare diseases. While I'm not a human, I'm here to assist you with a human touch! 😊<br><br>
@@ -537,7 +537,6 @@ User: {user_query}
         else:
             return jsonify({"answer": "Sorry, I couldn't generate a response. Please try again."})
 
-        # Format URLs in the chatbot response
         html_answer = raw_answer.replace("\n", "<br>")
         html_answer = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', html_answer)
         html_answer = format_urls_to_click_links(html_answer)
@@ -551,6 +550,8 @@ User: {user_query}
 def get_disease_count():
     """Return the total number of unique diseases from the Prevalence sheet."""
     global fetched_data
+    if "Prevalence" not in fetched_data:
+        load_sheet("Prevalence")
     if "Prevalence" in fetched_data and "Disease" in fetched_data["Prevalence"].columns:
         count = fetched_data["Prevalence"]["Disease"].dropna().nunique()
         return jsonify({"count": count})
@@ -582,5 +583,6 @@ def get_geographic_spread():
     except Exception as e:
         return jsonify({"error": str(e), "locations": []})
 
-if __name__ == "__main__":  
-    app.run(debug=True)
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
