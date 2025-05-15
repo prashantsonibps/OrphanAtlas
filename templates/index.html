@@ -1093,48 +1093,48 @@
 
         /* Mobile Popup Styles */
         .popup-overlay {
-          display: none;
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.5);
-          z-index: 10000;
-          justify-content: center;
-          align-items: center;
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
         }
 
         .popup-content {
-          background: #fff;
-          padding: 20px;
-          border-radius: 8px;
-          text-align: center;
-          max-width: 280px;
-          width: 90%;
-          border: 2px solid darkred;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 280px;
+            width: 90%;
+            border: 2px solid darkred;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         .popup-content p {
-          margin: 0 0 20px;
-          font-size: 1em;
-          color: #333;
+            margin: 0 0 20px;
+            font-size: 1em;
+            color: #333;
         }
 
         .continue-btn {
-          background: darkred;
-          color: #fff;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 5px;
-          cursor: pointer;
-          font-size: 1em;
-          transition: background 0.3s ease;
+            background: darkred;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s ease;
         }
 
         .continue-btn:hover {
-          background: #a00000;
+            background: #a00000;
         }
     </style>
 </head>
@@ -1618,26 +1618,41 @@
             preloadDiseases();
         };
 
-        // Mobile Popup Logic
-        function isMobilePhone() {
-          const userAgent = navigator.userAgent;
-          const isMobile = /Android|webOS|iPhone|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-          const isIPad = /iPad/i.test(userAgent);
-          const isSmallScreen = window.innerWidth <= 767;
+        // Mobile Popup Logic with Debugging
+        window.addEventListener('load', function() {
+            console.log('Popup logic running...');
+            function isMobilePhone() {
+                const userAgent = navigator.userAgent;
+                const isMobile = /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(userAgent);
+                const isIPad = /iPad/i.test(userAgent);
+                const isSmallScreen = window.innerWidth <= 600;
+                const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+                console.log('User Agent:', userAgent);
+                console.log('Is Mobile:', isMobile);
+                console.log('Is iPad:', isIPad);
+                console.log('Screen Width:', window.innerWidth);
+                console.log('Is Touch Device:', isTouchDevice);
+                return (isMobile || isTouchDevice) && !isIPad && isSmallScreen;
+            }
 
-          return isMobile && !isIPad && isSmallScreen;
-        }
+            const popup = document.getElementById('devicePopup');
+            const continueBtn = document.getElementById('continueBtn');
+            if (!popup || !continueBtn) {
+                console.error('Popup or Continue button not found in DOM');
+                return;
+            }
 
-        // Show popup on mobile phones
-        const popup = document.getElementById('devicePopup');
-        const continueBtn = document.getElementById('continueBtn');
-        if (isMobilePhone()) {
-          popup.style.display = 'flex';
-        }
+            if (isMobilePhone()) {
+                console.log('Detected mobile phone, showing popup');
+                popup.style.display = 'flex';
+            } else {
+                console.log('Not a mobile phone, popup not shown');
+            }
 
-        // Close popup when Continue button is clicked
-        continueBtn.addEventListener('click', function () {
-          popup.style.display = 'none';
+            continueBtn.addEventListener('click', function () {
+                console.log('Continue button clicked, hiding popup');
+                popup.style.display = 'none';
+            });
         });
     </script>
 
@@ -1857,10 +1872,10 @@
 
     <!-- Mobile Popup -->
     <div id="devicePopup" class="popup-overlay">
-      <div class="popup-content">
-        <p> Hi there, we're currently Desktop compatible, but we'll be here soon. Wanna continue here?</p>
-        <button id="continueBtn" class="continue-btn">Continue</button>
-      </div>
+        <div class="popup-content">
+            <p>Hi there, we're currently Desktop compatible, but we'll be here soon. Wanna continue here?</p>
+            <button id="continueBtn" class="continue-btn">Continue</button>
+        </div>
     </div>
 
 </body>
