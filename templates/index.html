@@ -1715,12 +1715,12 @@
                         <p>OrphanAtlas is your comprehensive resource for rare disease research, offering detailed insights into approximately 4000 rare diseases worldwide. Our platform provides access to both scientific and business information, empowering researchers, healthcare professionals, and policymakers.</p>
                     </div>
                     <div class="welcome-actions">
-                        <div class="welcome-action" onclick="openEmail('Submit')">
+                        <div class="welcome-action" onclick="openForm('Submit')">
                             <div class="icon">↑</div>
                             <h3>Submit</h3>
                             <p>Deposit data into OrphanAtlas databases</p>
                         </div>
-                        <div class="welcome-action" onclick="openEmail('Download')">
+                        <div class="welcome-action" onclick="openForm('Download')">
                             <div class="icon">↓</div>
                             <h3>Download</h3>
                             <p>Transfer OrphanAtlas data to your computer</p>
@@ -1887,13 +1887,12 @@
     </div>
 
     <script>
-        function openEmail(action) {
-            const email = "psoni@mail.yu.edu";
-            const subject = encodeURIComponent(action);
-            const url = `mailto:${email}?subject=${subject}`;
-            window.location.href = url;
-        }
-    </script>
+    function openForm(action) {
+        const url = "https://forms.gle/toQu4bcCNjTUf4858";
+        window.open(url, "_blank");
+    }
+</script>
+
 
 </body>
 </html>
