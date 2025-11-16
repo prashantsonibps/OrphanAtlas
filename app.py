@@ -186,7 +186,7 @@ def fetch_data():
                  f"including prevalence, symptoms, treatments, or research insights. Format each line as a sentence."
         try:
             response = deepseek_client.chat.completions.create(
-                model="deepseek/deepseek-chat:free",
+                model="deepseek/deepseek-chat",
                 messages=[
                     {"role": "system", "content": "You are a medical data generator assistant."},
                     {"role": "user", "content": prompt}
@@ -268,7 +268,7 @@ def fetch_data_stream():
     def generate_stream():
         try:
             response = deepseek_client.chat.completions.create(
-                model="deepseek/deepseek-chat:free",
+                model="deepseek/deepseek-chat",
                 messages=[
                     {"role": "system", "content": "You are a medical data generator assistant."},
                     {"role": "user", "content": prompt}
@@ -523,7 +523,7 @@ User: {user_query}
 
     try:
         response = deepseek_client.chat.completions.create(
-            model="deepseek/deepseek-chat:free",
+            model="deepseek/deepseek-chat",
             messages=[
                 {"role": "system", "content": "You are a rare disease assistant that replies with clean HTML for the web."},
                 {"role": "user", "content": prompt}
@@ -564,7 +564,7 @@ def get_geographic_spread():
         prompt = f"List 10 countries where the disease '{query}' is most commonly found based on prevalence. Respond only with the country names separated by commas."
 
         response = deepseek_client.chat.completions.create(
-            model="deepseek/deepseek-chat:free",
+            model="deepseek/deepseek-chat",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that outputs only country names."},
                 {"role": "user", "content": prompt}
