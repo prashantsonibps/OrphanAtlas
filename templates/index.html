@@ -358,6 +358,14 @@
             border: 1px solid #ccc;
             border-radius: 0;
             box-shadow: none;
+            cursor: pointer; /* make it feel clickable */
+            transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+        }
+
+        .welcome-section .welcome-action:hover {
+            background-color: #e6d4d4;
+            box-shadow: 0 0 0 2px darkred inset;
+            transform: translateY(-1px);
         }
 
         .welcome-section .welcome-action h3 {
@@ -1706,17 +1714,17 @@
                     <div class="welcome-intro">
                         <p>OrphanAtlas is your comprehensive resource for rare disease research, offering detailed insights into approximately 4000 rare diseases worldwide. Our platform provides access to both scientific and business information, empowering researchers, healthcare professionals, and policymakers.</p>
                     </div>
-                    <div class="welcome-action" onclick="openEmail('Submit')">
-                        <div class="icon">↑</div>
-                        <h3>Submit</h3>
-                        <p>Deposit data into OrphanAtlas databases</p>
-                    </div>
-                    <div class="welcome-action" onclick="openEmail('Download')">
-                        <div class="icon">↓</div>
-                        <h3>Download</h3>
-                        <p>Transfer OrphanAtlas data to your computer</p>
-                    </div>
-
+                    <div class="welcome-actions">
+                        <div class="welcome-action" onclick="openEmail('Submit')">
+                            <div class="icon">↑</div>
+                            <h3>Submit</h3>
+                            <p>Deposit data into OrphanAtlas databases</p>
+                        </div>
+                        <div class="welcome-action" onclick="openEmail('Download')">
+                            <div class="icon">↓</div>
+                            <h3>Download</h3>
+                            <p>Transfer OrphanAtlas data to your computer</p>
+                        </div>
                     </div>
                     <div class="additional-info-container">
                         <div class="additional-info">
@@ -1878,16 +1886,14 @@
         </div>
     </div>
 
-
     <script>
-    function openEmail(action) {
-    const email = "psoni@mail.yu.edu";
-    const subject = encodeURIComponent(action);
-    const url = `mailto:${email}?subject=${subject}`;
-    window.location.href = url;
-}
-</script>
-
+        function openEmail(action) {
+            const email = "psoni@mail.yu.edu";
+            const subject = encodeURIComponent(action);
+            const url = `mailto:${email}?subject=${subject}`;
+            window.location.href = url;
+        }
+    </script>
 
 </body>
 </html>
