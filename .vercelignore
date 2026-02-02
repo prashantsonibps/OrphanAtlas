@@ -1,0 +1,8 @@
+# Backend should not be deployed to Vercel
+backend/
+*.py
+requirements.txt
+Procfile
+symposiumfile.xlsx
+
+# Only frontend should be deployed

@@ -1,58 +1,41 @@
 # OrphanAtlas
 
-> Rare disease database with AI-powered insights. 4000+ diseases, searchable, with chatbot and PDF reports.
+A comprehensive rare disease database with AI-powered insights, covering over 4000 rare diseases.
 
-## 🚀 Quick Deploy (100% FREE)
+## Features
 
-```bash
-# 1. Deploy Backend to GCP Cloud Run
-cd backend
-export OPENROUTER_API_KEY="your-key-optional"
-./deploy-free-tier.sh
+- **Disease Search**: Search and explore 4000+ rare diseases with detailed information
+- **AI Chatbot**: Ask questions about rare diseases and get instant answers
+- **Geographic Spread**: Visualize where diseases are most prevalent globally
+- **PDF Reports**: Download comprehensive disease reports
+- **Data Categories**: Prevalence, Publications, Classification, Symptoms, Inheritance, Genetic Variation, Treatments, and Biopharma Pipeline
 
-# 2. Update frontend/config.js with your backend URL
+## Architecture
 
-# 3. Deploy Frontend to Vercel
-cd frontend
-vercel --prod
-```
+- **Frontend**: Static HTML/CSS/JS hosted on Vercel
+- **Backend**: Flask API hosted on GCP Cloud Run
+- **AI**: DeepSeek V3 via OpenRouter API
 
-**Cost: $0/month** (within free tier)
+## Tech Stack
 
----
+**Backend:**
+- Flask (Python web framework)
+- Pandas (Data processing)
+- FPDF (PDF generation)
+- OpenAI (AI integration)
 
-## 🏗️ Architecture
+**Frontend:**
+- HTML/CSS/JavaScript
+- Leaflet.js (Maps)
+- Particles.js (Effects)
 
-- **Backend**: Flask API on GCP Cloud Run (FREE tier, accepts cold starts)
-- **Frontend**: Static HTML on Vercel (FREE forever)
-- **AI**: DeepSeek V3 via OpenRouter (pay-as-you-go, ~$0-5/month)
+## Data Sources
 
----
+- Orphanet (Rare disease database)
+- FDA (Drug approvals)
+- PubMed (Research publications)
 
-## ✨ Features
-
-- Search 4000+ rare diseases
-- AI chatbot for questions
-- Geographic spread visualization
-- Download PDF reports
-- Mobile responsive
-
----
-
-## 📊 Data Categories
-
-1. Prevalence
-2. Publications
-3. Classification
-4. Symptoms
-5. Inheritance
-6. Genetic Variation
-7. Approved Treatments
-8. Biopharma Pipeline
-
----
-
-## 🛠️ Local Development
+## Local Development
 
 **Backend:**
 ```bash
@@ -60,6 +43,7 @@ cd backend
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+export OPENROUTER_API_KEY="your-api-key"
 python app.py
 ```
 
@@ -69,26 +53,15 @@ cd frontend
 python3 -m http.server 3000
 ```
 
----
+Visit `http://localhost:3000`
 
-## ⚙️ Tech Stack
+## Deployment
 
-- **Backend**: Flask, Pandas, FPDF, OpenAI
-- **Frontend**: HTML/CSS/JS, Leaflet, Particles.js
-- **Hosting**: GCP Cloud Run, Vercel
+- Frontend: Deploy `frontend/` folder to Vercel
+- Backend: Deploy `backend/` folder to GCP Cloud Run
 
----
+Set `OPENROUTER_API_KEY` environment variable in GCP Cloud Run for AI features.
 
-## 💰 Free Tier Notes
+## License
 
-- First load: 5-10s (backend cold start - normal for free tier)
-- Subsequent loads: <2s (backend stays awake)
-- **Set budget alerts**: https://console.cloud.google.com/billing/budgets
-
----
-
-## 📝 Credits
-
-Data: Orphanet, FDA, PubMed  
-AI: DeepSeek V3  
-Hosting: GCP, Vercel
+Educational and research purposes.
