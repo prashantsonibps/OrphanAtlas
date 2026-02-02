@@ -1,0 +1,1899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>OrphanAtlas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="config.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+            color: black;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            background-color: darkred;
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.5em;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-logo {
+            height: 40px;
+            width: auto;
+        }
+
+        .navbar-title {
+            font-size: 1.5em;
+        }
+
+        .hamburger {
+            display: none;
+            font-size: 1.5em;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        .secondary-navbar {
+            background-color: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .quote-section {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .quote {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: darkred;
+        }
+
+        .dashboard {
+            display: flex;
+            position: relative;
+            z-index: 1;
+            padding-bottom: 20px;
+        }
+
+        .sidebar {
+            width: 200px;
+            background-color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar a {
+            padding: 10px 0;
+            font-size: 1em;
+            color: black;
+            text-decoration: none;
+            border-bottom: 1px solid black;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .sidebar a.active {
+            color: darkred;
+            position: relative;
+        }
+
+        .sidebar a.active:after {
+            content: ">>";
+            position: absolute;
+            right: -20px;
+            color: darkred;
+        }
+
+        .sidebar a:hover {
+            color: darkred;
+        }
+
+        .sidebar .dropdown {
+            position: relative;
+        }
+
+        .sidebar .dropdown-content {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 0;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+
+        .sidebar .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .sidebar .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 10px 20px;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .search-bar-container {
+            display: flex;
+            align-items: center;
+            width: 80%;
+            max-width: 1000px;
+            background-color: #fff5f5;
+            border: 2px solid darkred;
+            border-radius: 25px;
+            padding: 5px 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin: 0 auto;
+        }
+
+        .search-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 10px;
+            font-size: 1.2em;
+            border: none;
+            outline: none;
+            background-color: transparent;
+        }
+
+        .search-container button {
+            padding: 10px 15px;
+            border: none;
+            background-color: transparent;
+            color: darkred;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: color 0.3s ease-in-out;
+        }
+
+        .search-container button:hover {
+            color: #a00000;
+        }
+
+        .suggestions-box {
+            position: absolute;
+            background: white;
+            border: 1px solid darkred;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+            top: 100%;
+            left: 0;
+            border-radius: 5px;
+        }
+
+        .suggestions-box a {
+            display: block;
+            padding: 8px;
+            text-decoration: none;
+            color: black;
+            border-bottom: 1px solid lightgray;
+            cursor: pointer;
+        }
+
+        .suggestions-box a:hover {
+            background-color: lightgray;
+        }
+
+        .disease-list {
+            width: 100%;
+            max-width: 500px;
+            overflow-y: auto;
+            padding: 10px;
+            text-align: left;
+            max-height: calc(100vh - 200px);
+            position: relative;
+        }
+
+        .disease-list .sort-container {
+            margin-bottom: 10px;
+            position: sticky;
+            top: 0;
+            background-color: white;
+            z-index: 10;
+            padding: 5px 0;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .disease-list .sort-container select {
+            padding: 5px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .disease-list .disease-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            border-bottom: 1px solid lightgray;
+        }
+
+        .disease-list .disease-item a {
+            text-decoration: none;
+            color: black;
+            flex: 1;
+        }
+
+        .disease-list .disease-item a:hover {
+            background-color: lightgray;
+        }
+
+        .disease-list .disease-item .prevalence {
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .disease-list .alphabet-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            justify-content: center;
+            position: sticky;
+            top: 0;
+            background-color: white;
+            z-index: 10;
+            padding: 10px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .disease-list .alphabet-nav button {
+            padding: 3px 6px;
+            font-size: 0.8em;
+            border: 1px solid #ccc;
+            background-color: #f5f5f5;
+            cursor: pointer;
+            border-radius: 3px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .disease-list .alphabet-nav button:hover {
+            background-color: #ddd;
+        }
+
+        .content-section {
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            display: none;
+        }
+
+        .welcome-section {
+            padding: 20px 0 0 0;
+            text-align: left;
+            width: 100%;
+        }
+
+        .welcome-section h2 {
+            color: darkred;
+            margin-bottom: 10px;
+        }
+
+        .welcome-section .welcome-intro {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid darkred;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .welcome-section .welcome-intro p {
+            margin: 0;
+            animation: fadeInText 3s ease-in-out forwards;
+            display: block;
+        }
+
+        @keyframes fadeInText {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .welcome-section .welcome-actions {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .welcome-section .welcome-action {
+            text-align: center;
+            flex: 1;
+            max-width: 350px;
+            padding: 8px 15px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 0;
+            box-shadow: none;
+            cursor: pointer; /* make it feel clickable */
+            transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+        }
+
+        .welcome-section .welcome-action:hover {
+            background-color: #e6d4d4;
+            box-shadow: 0 0 0 2px darkred inset;
+            transform: translateY(-1px);
+        }
+
+        .welcome-section .welcome-action h3 {
+            color: darkred;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .welcome-section .welcome-action p {
+            margin: 0;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .welcome-section .welcome-action .icon {
+            font-size: 2em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .additional-info-container {
+            width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 10px 0;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .additional-info {
+            display: inline-flex;
+            gap: 20px;
+            padding: 0 10px;
+        }
+
+        .info-block {
+            display: inline-block;
+            width: 200px;
+            background-color: #fff5f5;
+            border: 2px solid darkred;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: filter 0.3s ease;
+            vertical-align: top;
+            white-space: normal;
+        }
+
+        .info-block:hover {
+            filter: brightness(1.1);
+        }
+
+        .info-block dt {
+            font-weight: bold;
+            color: darkred;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .info-block dd {
+            margin: 0;
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .database-categories-section {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .database-categories-section h2 {
+            color: darkred;
+            margin-bottom: 20px;
+        }
+
+        .database-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .database-block {
+            perspective: 1000px;
+            height: 180px;
+            cursor: pointer;
+        }
+
+        .database-block-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.3s ease-in-out;
+            transform-style: preserve-3d;
+            background-color: #fff5f5;
+            border: 2px solid darkred;
+            border-radius: 10px;
+            transition: filter 0.3s ease;
+        }
+
+        .database-block:hover .database-block-inner {
+            filter: brightness(1.1);
+        }
+
+        .database-block.flipped .database-block-inner {
+            transform: rotateY(180deg);
+        }
+
+        .database-block-front,
+        .database-block-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            box-sizing: border-box;
+            border-radius: 10px;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .database-block-front {
+            background-color: #fff5f5;
+            color: darkred;
+            font-weight: bold;
+            font-size: 1.1em;
+            opacity: 1;
+        }
+
+        .database-block.flipped .database-block-front {
+            opacity: 0;
+        }
+
+        .database-block-back {
+            background-color: #fff5f5;
+            color: #333;
+            transform: rotateY(180deg);
+            font-size: 0.9em;
+            text-align: left;
+            white-space: normal;
+            overflow-y: auto;
+            line-height: 1.4;
+            opacity: 0;
+        }
+
+        .database-block.flipped .database-block-back {
+            opacity: 1;
+        }
+
+        .quote-rotator {
+            margin: 10px 0;
+            text-align: center;
+            font-size: 1.2em;
+            color: #333;
+            font-style: italic;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .quote-rotator.active {
+            opacity: 1;
+        }
+
+        .quote-rotator .author {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: darkred;
+            font-style: normal;
+            font-weight: bold;
+        }
+
+        .popular-resources {
+            width: 200px;
+            background-color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .popular-resources h3 {
+            color: darkred;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            text-align: left;
+            border-bottom: 1px dashed #ccc;
+        }
+
+        .popular-resources ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .popular-resources li {
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 5px;
+        }
+
+        .popular-resources a {
+            color: darkred;
+            text-decoration: none;
+        }
+
+        .popular-resources a:hover {
+            text-decoration: underline;
+        }
+
+        .popular-resources .prevalence-info {
+            font-size: 0.9em;
+            color: #333;
+        }
+
+        .popular-resources .prevalence-info dt {
+            font-weight: bold;
+            color: darkred;
+            margin-top: 10px;
+        }
+
+        .popular-resources .prevalence-info dd {
+            margin: 5px 0 10px 0;
+        }
+
+        .disease-count-block {
+            width: 100%;
+            text-align: center;
+            padding: 20px 0;
+            font-size: 1em;
+            background-color: darkred;
+            color: white;
+        }
+
+        .footer {
+            width: 100%;
+            background-color: darkred;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 10;
+            box-sizing: border-box;
+        }
+
+        .footer-left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            min-width: 200px;
+        }
+
+        .footer-left img {
+            height: 80px;
+            width: auto;
+        }
+
+        .footer-left .footer-text {
+            text-align: center;
+        }
+
+        .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            min-width: 200px;
+        }
+
+        .footer-right .social-icons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .footer-right .social-icons a {
+            color: white;
+            font-size: 1.2em;
+            text-decoration: none;
+        }
+
+        .footer-right .social-icons a:hover {
+            color: #ddd;
+        }
+
+        .footer-right .contact-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .footer-right .contact-links a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .footer-right .contact-links a:hover {
+            text-decoration: underline;
+        }
+
+        #voice-mic {
+            margin-right: 10px;
+            font-size: 1.2em;
+            color: darkred;
+            cursor: pointer;
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        #search-input {
+            padding-left: 35px !important;
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes blink {
+            50% { border-color: transparent; }
+        }
+
+        #chat-icon-btn {
+            background: darkred;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.4em;
+            width: 52px;
+            height: 52px;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #chat-icon-btn::before {
+            content: "";
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: rgba(128, 128, 128, 0.5);
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        #chatbot {
+            display: none;
+            flex-direction: column;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 340px;
+            height: 440px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 9999;
+        }
+
+        #chatbot-header {
+            background-color: darkred;
+            color: white;
+            padding: 10px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            position: relative;
+            text-align: center;
+        }
+
+        .chatbot-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.2em;
+            color: white;
+            cursor: pointer;
+        }
+
+        #chat-window {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            font-size: 0.9em;
+        }
+
+        #typing-indicator {
+            display: none;
+            padding: 10px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .typing-dots {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .typing-dots span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #666;
+            border-radius: 50%;
+            margin-right: 3px;
+            animation: typing 1s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+        }
+
+        .message-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .message-content {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .user-message .message-content {
+            background-color: #ffe6e6;
+            text-align: right;
+        }
+
+        .bot-message .message-content {
+            background-color: #e6f3ff;
+        }
+
+        .chatbot-input {
+            padding: 10px;
+            display: flex;
+            gap: 8px;
+            border-top: 1px solid #ccc;
+            background-color: #fff;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 6px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .chatbot-input button {
+            padding: 6px 12px;
+            font-size: 0.9em;
+            background: darkred;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(2px, -2px); }
+            60% { transform: translate(-2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .shake-bubble {
+            animation: shake 0.5s ease-in-out 1;
+        }
+
+        /* Mobile-Friendly Styles */
+        @media (max-width: 768px) {
+            .navbar {
+                justify-content: space-between;
+                padding: 10px 15px;
+                align-items: center;
+            }
+
+            .hamburger {
+                display: block;
+                order: 1;
+            }
+
+            .navbar-logo {
+                order: 2;
+                height: 30px;
+            }
+
+            .navbar-title {
+                order: 3;
+                font-size: 1.2em;
+                flex-grow: 1;
+                text-align: center;
+            }
+
+            .dashboard {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -250px;
+                width: 250px;
+                height: 100%;
+                background-color: white;
+                z-index: 1000;
+                transform: translateX(0);
+                box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+                overflow-y: auto;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .sidebar a {
+                padding: 15px 20px;
+                font-size: 1.1em;
+            }
+
+            .sidebar a.active:after {
+                right: 20px;
+            }
+
+            .sidebar .dropdown-content {
+                position: static;
+                box-shadow: none;
+                background-color: #f1f1f1;
+                padding-left: 20px;
+            }
+
+            .main-content {
+                padding: 10px;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .search-bar-container {
+                width: 90%;
+                padding: 5px;
+            }
+
+            .search-container input {
+                font-size: 1em;
+                padding: 8px;
+            }
+
+            .search-container button {
+                font-size: 1em;
+            }
+
+            .disease-list {
+                max-width: 100%;
+                padding: 5px;
+            }
+
+            .disease-list .sort-container select {
+                font-size: 0.9em;
+                padding: 3px;
+            }
+
+            .disease-list .alphabet-nav button {
+                font-size: 0.7em;
+                width: 20px;
+                padding: 2px;
+            }
+
+            .welcome-section .welcome-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .welcome-section .welcome-action {
+                max-width: 100%;
+                padding: 10px;
+            }
+
+            .additional-info-container {
+                padding: 5px 0;
+            }
+
+            .info-block {
+                width: 180px;
+                padding: 10px;
+            }
+
+            .database-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .database-block {
+                height: 150px;
+            }
+
+            .popular-resources {
+                width: 100%;
+                padding: 10px;
+            }
+
+            .footer {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px;
+                text-align: center;
+            }
+
+            .footer-left, .footer-right {
+                min-width: 100%;
+                justify-content: center;
+            }
+
+            .footer-right .contact-links {
+                justify-content: center;
+            }
+
+            #chatbot {
+                width: 90%;
+                height: 80vh;
+                bottom: 10px;
+                right: 5%;
+            }
+
+            .chatbot-input input {
+                font-size: 0.9em;
+            }
+
+            .chatbot-input button {
+                font-size: 0.8em;
+                padding: 5px 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                font-size: 1.2em;
+            }
+
+            .navbar-logo {
+                height: 25px;
+            }
+
+            .hamburger {
+                font-size: 1.2em;
+            }
+
+            .navbar-title {
+                font-size: 1em;
+            }
+
+            .quote {
+                font-size: 1.2em;
+            }
+
+            .search-container input {
+                font-size: 0.9em;
+                padding: 6px;
+            }
+
+            .disease-list .disease-item a {
+                font-size: 0.9em;
+            }
+
+            .disease-list .disease-item .prevalence {
+                font-size: 0.8em;
+            }
+
+            .welcome-section h2 {
+                font-size: 1.3em;
+            }
+
+            .welcome-section .welcome-intro p {
+                font-size: 1em;
+            }
+
+            .info-block dt {
+                font-size: 1em;
+            }
+
+            .info-block dd {
+                font-size: 0.8em;
+            }
+
+            .database-block-front, .database-block-back {
+                font-size: 0.8em;
+            }
+
+            .quote-rotator {
+                font-size: 1em;
+            }
+
+            .quote-rotator .author {
+                font-size: 0.8em;
+            }
+        }
+
+        /* Mobile Popup Styles */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 280px;
+            width: 90%;
+            border: 2px solid darkred;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .popup-content p {
+            margin: 0 0 20px;
+            font-size: 1em;
+            color: #333;
+        }
+
+        .continue-btn {
+            background: darkred;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s ease;
+        }
+
+        .continue-btn:hover {
+            background: #a00000;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Floating Chat Button -->
+    <button onclick="toggleChatbot()" id="chat-icon-btn" title="Ask OrphanAtlas">
+        💬
+    </button>
+
+    <!-- Chatbot Window -->
+    <div id="chatbot">
+        <div id="chatbot-header">
+            Chat with OrphanAtlas
+            <span class="chatbot-close" onclick="toggleChatbot()">×</span>
+        </div>
+        <div id="chat-window"></div>
+        <div id="typing-indicator"></div>
+        <div class="chatbot-input">
+            <input id="chat-input" type="text" placeholder="Ask about a disease...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const micIcon = document.createElement("i");
+            micIcon.id = "voice-mic";
+            micIcon.className = "fas fa-microphone";
+            document.querySelector(".search-container").prepend(micIcon);
+
+            micIcon.addEventListener('click', () => {
+                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'en-US';
+                recognition.interimResults = true;
+                recognition.continuous = false;
+                recognition.start();
+
+                const input = document.getElementById("search-input");
+
+                recognition.onresult = function(event) {
+                    const transcript = Array.from(event.results)
+                        .map(result => result[0])
+                        .map(result => result.transcript)
+                        .join('');
+                    input.value = transcript;
+                };
+
+                setTimeout(() => recognition.stop(), 5000);
+            });
+
+            setTimeout(() => {
+                const chatBtn = document.getElementById("chat-icon-btn");
+                chatBtn.classList.add("shake-bubble");
+                setTimeout(() => chatBtn.classList.remove("shake-bubble"), 3000);
+            }, 2000);
+
+            const placeholderText = " Try Speaking or Search for a disease...";
+            const input = document.getElementById("search-input");
+            let i = 0;
+
+            function typePlaceholder() {
+                if (i < placeholderText.length) {
+                    input.setAttribute("placeholder", placeholderText.substring(0, i + 1));
+                    i++;
+                    setTimeout(typePlaceholder, 100);
+                } else {
+                    setTimeout(() => {
+                        i = 0;
+                        typePlaceholder();
+                    }, 2000);
+                }
+            }
+
+            typePlaceholder();
+
+            const quotes = [
+                { text: "It shouldn’t matter how rare a disease is. Every life counts.", author: "Yann Le Cam, Chief Executive Officer, EURORDIS – Rare Diseases Europe" },
+                { text: "For rare disease patients, hope is not a luxury—it’s a necessity.", author: "Nicole Boice, Founder, Global Genes" },
+                { text: "The reality for rare disease patients is a marathon of misdiagnoses, uncertainty, and isolation.", author: "Dr. William Gahl, Clinical Director, National Institutes of Health Undiagnosed Diseases Program" },
+                { text: "Progress in rare disease research benefits all of medicine.", author: "Dr. Francis S. Collins, Former Director of the National Institutes of Health" },
+                { text: "It’s not just about finding a cure—it’s about improving lives.", author: "Andy McNair, Chair, Rare Disease UK" },
+                { text: "Patients with rare diseases are the true experts in their conditions.", author: "Dr. Ana Rath, Director, Orphanet" },
+                { text: "The problem with rare diseases is not that they’re rare—it’s that knowledge about them is.", author: "Dr. David A. Pearce, President of Innovation, Research, and World Clinic, Sanford Health" },
+                { text: "Rare diseases are not rare when you count all the people living with them.", author: "Dr. Stephen Groft, Former Director, Office of Rare Diseases Research, NIH" },
+                { text: "When a diagnosis is rare, the challenges are not just medical—they’re emotional, social, and financial.", author: "Donna Appell, Founder, Hermansky-Pudlak Syndrome Network" },
+                { text: "The rare disease community shows us what real strength and advocacy look like.", author: "Barack Obama, during remarks related to NIH research and precision medicine (paraphrased, 2015)" }
+            ];
+
+            let currentQuoteIndex = 0;
+            const quoteElement = document.getElementById("quote-rotator");
+
+            function rotateQuote() {
+                quoteElement.classList.remove("active");
+                setTimeout(() => {
+                    const quote = quotes[currentQuoteIndex];
+                    quoteElement.innerHTML = `"${quote.text}"<span class="author">— ${quote.author}</span>`;
+                    quoteElement.classList.add("active");
+                    currentQuoteIndex = (currentQuoteIndex + 1) % quotes.length;
+                }, 1000);
+            }
+
+            if (quoteElement) {
+                rotateQuote();
+                setInterval(rotateQuote, 10000);
+            }
+        });
+
+        function toggleChatbot() {
+            const bot = document.getElementById("chatbot");
+            const chatWindow = document.getElementById("chat-window");
+            bot.style.display = bot.style.display === 'none' || bot.style.display === '' ? 'flex' : 'none';
+
+            if (bot.style.display === 'flex' && chatWindow.innerHTML.trim() === '') {
+                chatWindow.innerHTML += `
+                    <div class="chat-message bot-message">
+                        <div class="message-header">OrphanAtlas:</div>
+                        <div class="message-content">
+                            Hello! I'm <strong>OrphanAtlas AI Assistant</strong> 🤖<br>
+                            I can help you with Rare Disease Information.<br>
+                            Try asking:<br>
+                            • What is Hepatitis Delta?<br>
+                            • Show me Down Syndrome treatments.<br>
+                            • How many rare diseases exist?
+                        </div>
+                    </div>`;
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById("chat-input");
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            const chatWindow = document.getElementById("chat-window");
+            const typingIndicator = document.getElementById("typing-indicator");
+            chatWindow.innerHTML += `
+                <div class="chat-message user-message">
+                    <div class="message-header">You:</div>
+                    <div class="message-content">${msg}</div>
+                </div>`;
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            input.value = "";
+
+            // Show typing indicator
+            typingIndicator.style.display = 'block';
+            typingIndicator.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div> typing...';
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            fetch(`${API_URL}/ask_bot`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question: msg })
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Hide typing indicator
+                typingIndicator.style.display = 'none';
+
+                let reply = data.answer || "Sorry, no answer found.";
+                chatWindow.innerHTML += `
+                    <div class="chat-message bot-message">
+                        <div class="message-header">OrphanAtlas:</div>
+                        <div class="message-content">${reply}</div>
+                    </div>`;
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            })
+            .catch(() => {
+                // Hide typing indicator
+                typingIndicator.style.display = 'none';
+
+                chatWindow.innerHTML += `
+                    <div class="chat-message bot-message">
+                        <div class="message-header">OrphanAtlas:</div>
+                        <div class="message-content">Error contacting assistant</div>
+                    </div>`;
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            });
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        function showSidebarAnimation() {
+            if (hasAnimationPlayed) return;
+            hasAnimationPlayed = true;
+        }
+
+        function toggleDropdown(event) {
+            event.preventDefault();
+            const dropdownContent = document.getElementById('databaseDropdown');
+            dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function showDatabaseCategories(event) {
+            event.preventDefault();
+            let diseaseList = document.getElementById("disease-list");
+            let welcomeSection = document.getElementById("welcome-section");
+            let databaseSection = document.getElementById("database-categories-section");
+            let popularResources = document.getElementById("popular-resources");
+
+            diseaseList.innerHTML = "";
+            welcomeSection.style.display = 'none';
+            databaseSection.style.display = 'block';
+            popularResources.style.display = 'none';
+
+            document.querySelectorAll('.sidebar a').forEach(link => link.classList.remove('active'));
+            event.target.classList.add('active');
+
+            showSidebarAnimation();
+        }
+
+        function flipBlock(block) {
+            const allBlocks = document.querySelectorAll('.database-block');
+            allBlocks.forEach(b => {
+                if (b !== block && b.classList.contains('flipped')) {
+                    b.classList.remove('flipped');
+                }
+            });
+
+            block.classList.toggle('flipped');
+        }
+
+        function fetchDiseases(type, event, sortOption = 'default') {
+            event.preventDefault();
+            let listContainer = document.getElementById("disease-list");
+            let welcomeSection = document.getElementById("welcome-section");
+            let databaseSection = document.getElementById("database-categories-section");
+            let popularResources = document.getElementById("popular-resources");
+            listContainer.innerHTML = "";
+
+            if (type === 'alphabetical' || type === 'prevalence' || type === 'sheet_order') {
+                welcomeSection.style.display = 'none';
+                databaseSection.style.display = 'none';
+                popularResources.style.display = (type === 'prevalence') ? 'block' : 'none';
+            } else {
+                welcomeSection.style.display = 'block';
+                databaseSection.style.display = 'none';
+                popularResources.style.display = 'block';
+            }
+
+            if (type === 'alphabetical') {
+                allDiseases = alphabeticalDiseases;
+                listContainer.innerHTML = '<div class="alphabet-nav"></div>';
+                const alphabetNav = listContainer.querySelector('.alphabet-nav');
+                for (let i = 65; i <= 90; i++) {
+                    const letter = String.fromCharCode(i);
+                    const button = document.createElement('button');
+                    button.textContent = letter;
+                    button.onclick = () => scrollToLetter(letter);
+                    alphabetNav.appendChild(button);
+                }
+                allDiseases.forEach(disease => {
+                    let diseaseItem = document.createElement("div");
+                    diseaseItem.className = "disease-item";
+                    let link = document.createElement("a");
+                    link.href = `blocks.html?query=${encodeURIComponent(disease)}`;
+                    link.textContent = disease;
+                    link.setAttribute('data-letter', disease.charAt(0).toUpperCase());
+                    diseaseItem.appendChild(link);
+                    listContainer.appendChild(diseaseItem);
+                });
+
+                showSidebarAnimation();
+            } else if (type === 'prevalence') {
+                allDiseases = prevalenceDiseases;
+                listContainer.innerHTML = `
+                    <div class="sort-container">
+                        <label for="sort-by">Sort by: </label>
+                        <select id="sort-by" onchange="sortDiseases(this.value)">
+                            <option value="default">Default</option>
+                            <option value="most_common">Most Common</option>
+                            <option value="least_common">Least Common</option>
+                            <option value="birth_prevalence">Birth Prevalence</option>
+                        </select>
+                    </div>
+                `;
+                sortDiseases(sortOption);
+                popularResources.innerHTML = `
+                    <h3>Prevalence</h3>
+                    <dl class="prevalence-info">
+                        <dd>lists the proportion of a population found affected by a certain medical condition at a specific time. It is typically indicated by the number of cases per 100,000 people.</dd>
+                        <dt>* indicates European data</dt>
+                        <dd></dd>
+                        <dt>BP indicates birth prevalence</dt>
+                        <dd></dd>
+                        <dt>Without specification published figures are worldwide</dt>
+                        <dd></dd>
+                    </dl>
+                `;
+
+                showSidebarAnimation();
+            } else if (type === 'sheet_order') {
+                allDiseases = sheetOrderDiseases;
+                allDiseases.forEach(disease => {
+                    let diseaseItem = document.createElement("div");
+                    diseaseItem.className = "disease-item";
+                    let link = document.createElement("a");
+                    link.href = `blocks.html?query=${encodeURIComponent(disease)}`;
+                    link.textContent = disease;
+                    diseaseItem.appendChild(link);
+                    listContainer.appendChild(diseaseItem);
+                });
+            }
+
+            document.querySelectorAll('.sidebar a').forEach(link => link.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function sortDiseases(sortOption) {
+            let listContainer = document.getElementById("disease-list");
+            let sortContainer = listContainer.querySelector('.sort-container');
+            listContainer.innerHTML = '';
+            listContainer.appendChild(sortContainer);
+
+            let sortedDiseases = [...prevalenceDiseases];
+
+            if (sortOption === 'default') {
+                sortedDiseases = [...prevalenceDiseases];
+            } else if (sortOption === 'most_common') {
+                sortedDiseases.sort((a, b) => {
+                    let aValue = parseFloat(a['Estimated prevalence(/100,000)']) || 0;
+                    let bValue = parseFloat(b['Estimated prevalence(/100,000)']) || 0;
+                    return bValue - aValue;
+                });
+            } else if (sortOption === 'least_common') {
+                sortedDiseases.sort((a, b) => {
+                    let aValue = parseFloat(a['Estimated prevalence(/100,000)']) || 0;
+                    let bValue = parseFloat(b['Estimated prevalence(/100,000)']) || 0;
+                    return aValue - bValue;
+                });
+            } else if (sortOption === 'birth_prevalence') {
+                console.log("All Prevalence Values:", sortedDiseases.map(disease => disease['Estimated prevalence(/100,000)']));
+                sortedDiseases = sortedDiseases.filter(disease => {
+                    let prevalence = String(disease['Estimated prevalence(/100,000)'] || '')
+                        .replace(/\n/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim()
+                        .toUpperCase();
+                    let matchesBP = prevalence.includes('BP');
+                    console.log(`Prevalence: "${prevalence}", Matches BP: ${matchesBP}`);
+                    return matchesBP;
+                });
+                console.log("Filtered Diseases for Birth Prevalence:", sortedDiseases);
+            }
+
+            sortedDiseases.forEach(disease => {
+                let diseaseItem = document.createElement("div");
+                diseaseItem.className = "disease-item";
+                let link = document.createElement("a");
+                link.href = `blocks.html?query=${encodeURIComponent(disease.Disease)}`;
+                link.textContent = disease.Disease;
+                diseaseItem.appendChild(link);
+                let prevalenceSpan = document.createElement("span");
+                prevalenceSpan.className = "prevalence";
+                prevalenceSpan.textContent = disease['Estimated prevalence(/100,000)'] || 'N/A';
+                diseaseItem.appendChild(prevalenceSpan);
+                listContainer.appendChild(diseaseItem);
+            });
+        }
+
+        function scrollToLetter(letter) {
+            let listContainer = document.getElementById("disease-list");
+            let diseases = listContainer.getElementsByTagName("a");
+            for (let i = 0; i < diseases.length; i++) {
+                if (diseases[i].getAttribute('data-letter') === letter) {
+                    const navHeight = listContainer.querySelector('.alphabet-nav').offsetHeight;
+                    const elementPosition = diseases[i].offsetTop - navHeight - 10;
+                    listContainer.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                    break;
+                }
+            }
+        }
+
+        function fetchSuggestions() {
+            let query = document.getElementById("search-input").value.trim();
+            let suggestionsBox = document.getElementById("suggestions-box");
+
+            if (query.length < 1) {
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+
+            fetch(`${API_URL}/search_suggestions?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    suggestionsBox.innerHTML = "";
+                    if (data.length === 0) {
+                        suggestionsBox.style.display = 'none';
+                        return;
+                    }
+
+                    data.forEach(disease => {
+                        let suggestionItem = document.createElement("a");
+                        suggestionItem.href = `blocks.html?query=${encodeURIComponent(disease)}`;
+                        suggestionItem.textContent = disease;
+                        suggestionsBox.appendChild(suggestionItem);
+                    });
+
+                    suggestionsBox.style.display = 'block';
+                })
+                .catch(error => console.error("Error fetching suggestions:", error));
+        }
+
+        document.addEventListener("click", function(event) {
+            let suggestionsBox = document.getElementById("suggestions-box");
+            let searchInput = document.getElementById("search-input");
+            let dropdownContent = document.getElementById("databaseDropdown");
+            let dropdownLink = document.getElementById("databaseCategoriesLink");
+
+            if (!searchInput.contains(event.target) && !suggestionsBox.contains(event.target)) {
+                suggestionsBox.style.display = 'none';
+            }
+
+            if (!dropdownLink.contains(event.target) && !dropdownContent.contains(event.target)) {
+                dropdownContent.style.display = 'none';
+            }
+
+            // Close sidebar if clicking outside on mobile
+            if (window.innerWidth <= 768) {
+                const sidebar = document.querySelector('.sidebar');
+                const hamburger = document.querySelector('.hamburger');
+                if (!sidebar.contains(event.target) && !hamburger.contains(event.target)) {
+                    sidebar.classList.remove('active');
+                }
+            }
+        });
+
+        let alphabeticalDiseases = [];
+        let prevalenceDiseases = [];
+        let sheetOrderDiseases = [];
+        let hasAnimationPlayed = false;
+
+        function preloadDiseases() {
+            fetch(`${API_URL}/get_diseases?type=alphabetical`)
+                .then(response => response.json())
+                .then(data => {
+                    alphabeticalDiseases = data.diseases || [];
+                })
+                .catch(error => console.error("Error preloading alphabetical diseases:", error));
+
+            fetch(`${API_URL}/get_diseases?type=prevalence`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Prevalence Diseases Data:", data.diseases);
+                    prevalenceDiseases = data.diseases || [];
+                })
+                .catch(error => console.error("Error preloading prevalence diseases:", error));
+
+            fetch(`${API_URL}/get_diseases?type=sheet_order`)
+                .then(response => response.json())
+                .then(data => {
+                    sheetOrderDiseases = data.diseases || [];
+                })
+                .catch(error => console.error("Error preloading sheet order diseases:", error));
+        }
+
+        window.onload = function() {
+            document.getElementById('homeLink').classList.add('active');
+            document.getElementById('welcome-section').style.display = 'block';
+            document.getElementById('popular-resources').style.display = 'block';
+            fetch(`${API_URL}/get_disease_count`)
+                .then(response => response.json())
+                .then(data => {
+                    const countElement = document.getElementById('disease-count');
+                    if (data.count) {
+                        countElement.textContent = data.count;
+                    } else {
+                        countElement.textContent = '0';
+                        console.error('Error fetching count:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching disease count:', error);
+                    document.getElementById('disease-count').textContent = '0';
+                });
+
+            preloadDiseases();
+        };
+
+        // Mobile Popup Logic with Debugging
+        window.addEventListener('load', function() {
+            console.log('Popup logic running...');
+            function isMobilePhone() {
+                const userAgent = navigator.userAgent;
+                const isMobile = /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(userAgent);
+                const isIPad = /iPad/i.test(userAgent);
+                const isSmallScreen = window.innerWidth <= 600;
+                const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+                console.log('User Agent:', userAgent);
+                console.log('Is Mobile:', isMobile);
+                console.log('Is iPad:', isIPad);
+                console.log('Screen Width:', window.innerWidth);
+                console.log('Is Touch Device:', isTouchDevice);
+                return (isMobile || isTouchDevice) && !isIPad && isSmallScreen;
+            }
+
+            const popup = document.getElementById('devicePopup');
+            const continueBtn = document.getElementById('continueBtn');
+            if (!popup || !continueBtn) {
+                console.error('Popup or Continue button not found in DOM');
+                return;
+            }
+
+            if (isMobilePhone()) {
+                console.log('Detected mobile phone, showing popup');
+                popup.style.display = 'flex';
+            } else {
+                console.log('Not a mobile phone, popup not shown');
+            }
+
+            continueBtn.addEventListener('click', function () {
+                console.log('Continue button clicked, hiding popup');
+                popup.style.display = 'none';
+            });
+        });
+    </script>
+
+    <div class="navbar">
+        <button class="hamburger" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+        <img src="/static/logo.png" alt="OrphanAtlas Logo" class="navbar-logo">
+        <div class="navbar-title">OrphanAtlas</div>
+    </div>
+
+    <div class="secondary-navbar">
+        <div class="quote-section">
+            <div class="quote">Together, We Turn Hope into Action for Rare Disease Patients</div>
+        </div>
+        <div class="search-bar-container">
+            <div class="search-container">
+                <input type="text" id="search-input" name="query" placeholder="" onkeyup="fetchSuggestions()" onkeypress="if(event.key==='Enter'){window.location.href='blocks.html?query='+encodeURIComponent(this.value)}" required autocomplete="off">
+                <button type="submit" onclick="window.location.href='blocks.html?query='+encodeURIComponent(document.getElementById('search-input').value)"><i class="fas fa-search"></i></button>
+                <div id="suggestions-box" class="suggestions-box"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard">
+        <div class="sidebar">
+            <a href="javascript:location.reload()" class="active" id="homeLink"><i class="fas fa-home"></i> OrphanAtlas Home</a>
+            <a href="#" onclick="fetchDiseases('alphabetical', event)" id="allDiseasesLink"><i class="fas fa-file-alt"></i> Disease List (A-Z)</a>
+            <a href="#" onclick="fetchDiseases('prevalence', event)" id="prevalenceLink"><i class="fas fa-chart-bar"></i> Lists by Prevalence</a>
+            <div class="dropdown">
+                <a href="#" onclick="showDatabaseCategories(event)" id="databaseCategoriesLink"><i class="fas fa-database"></i> Database Categories</a>
+                <div class="dropdown-content" id="databaseDropdown">
+                    <a href="#" onclick="fetchDiseases('sheet_order', event)">Prevalence</a>
+                    <a href="#" onclick="fetchDiseases('sheet_order', event)">Publications</a>
+                    <a href="#" onclick="fetchDiseases('sheet_order', event)">Classification</a>
+                    <a href="#" onclick="fetchDiseases('sheet_order', event)">Inheritance</a>
+                    <a href="#" onclick="fetchDiseases('sheet_order', event)">Approved Treatments</a>
+                    <a href="#" onclick="fetchDiseases('sheet_order', event)">Pipeline Drugs</a>
+                    <a href="#" onclick="fetchDiseases('sheet_order', event)">Genetic Variation</a>
+                    <a href="#" onclick="fetchDiseases('sheet_order', event)">AI Generated Data</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="disease-list" id="disease-list"></div>
+
+            <div class="content-section" id="welcome-section">
+                <div class="welcome-section">
+                    <h2>Welcome to OrphanAtlas</h2>
+                    <div class="welcome-intro">
+                        <p>OrphanAtlas is your comprehensive resource for rare disease research, offering detailed insights into approximately 4000 rare diseases worldwide. Our platform provides access to both scientific and business information, empowering researchers, healthcare professionals, and policymakers.</p>
+                    </div>
+                    <div class="welcome-actions">
+                        <div class="welcome-action" onclick="openForm('Submit')">
+                            <div class="icon">↑</div>
+                            <h3>Submit</h3>
+                            <p>Deposit data into OrphanAtlas databases</p>
+                        </div>
+                        <div class="welcome-action" onclick="openForm('Download')">
+                            <div class="icon">↓</div>
+                            <h3>Download</h3>
+                            <p>Transfer OrphanAtlas data to your computer</p>
+                        </div>
+                    </div>
+                    <div class="additional-info-container">
+                        <div class="additional-info">
+                            <div class="info-block">
+                                <dt>Prevalence</dt>
+                                <dd>Lists the proportion of a population found affected by a certain medical condition at a specific time. It is typically indicated by the number of cases per 100,000 people</dd>
+                            </div>
+                            <div class="info-block">
+                                <dt>Geographic Spread</dt>
+                                <dd>Shows the most affected age groups, genders, and regions for each condition, extracted using LLM-based queries from verified medical sources.</dd>
+                            </div>
+                            <div class="info-block">
+                                <dt>Publications</dt>
+                                <dd>Provides the link to the number of publications for each listed medical condition over the last 5 years. These numbers are a reflection of the amount of research being done on these diseases</dd>
+                            </div>
+                            <div class="info-block">
+                                <dt>Classification</dt>
+                                <dd>Lists each medical condition on the list as genetic vs non-genetic as well as one of 33 disease classifications as given on the Orphanet website</dd>
+                            </div>
+                            <div class="info-block">
+                                <dt>Symptoms</dt>
+                                <dd>Describes the common and distinguishing signs, symptoms, and clinical presentations associated with each listed medical condition, helping in early identification and diagnosis.</dd>
+                            </div>
+                            <div class="info-block">
+                                <dt>Inheritance</dt>
+                                <dd>Transfer of genetic information from parents to offsprings that may lead to the child inheriting a genetic disease or condition</dd>
+                            </div>
+                            <div class="info-block">
+                                <dt>Approved Treatments</dt>
+                                <dd>Names of approved treatments, as taken from the FDA list of approved orphan drugs, where available, for the listed medical conditions</dd>
+                            </div>
+                            <div class="info-block">
+                                <dt>Pipeline Drugs</dt>
+                                <dd>Drugs under development, where available, for the listed medical conditions</dd>
+                            </div>
+                            <div class="info-block">
+                                <dt>Genetic Variation</dt>
+                                <dd>Gives the type of genetic variation and details of the genes affected, where available</dd>
+                            </div>
+                            <div class="info-block">
+                                <dt>AI Insights</dt>
+                                <dd>Uses AI and Large Language Models (LLMs) to enrich data by extracting updated insights from verified medical sources, providing users with contextual and real-time information.</dd>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quote-rotator" id="quote-rotator"></div>
+                </div>
+            </div>
+
+            <div class="database-categories-section" id="database-categories-section">
+                <h2>Database Categories</h2>
+                <div class="database-grid">
+                    <div class="database-block" onclick="flipBlock(this)">
+                        <div class="database-block-inner">
+                            <div class="database-block-front">Prevalence</div>
+                            <div class="database-block-back">Lists the proportion of a population found affected by a certain medical condition at a specific time. It is typically indicated by the number of cases per 100,000 people</div>
+                        </div>
+                    </div>
+                    <div class="database-block" onclick="flipBlock(this)">
+                        <div class="database-block-inner">
+                            <div class="database-block-front">Publications</div>
+                            <div class="database-block-back">Provides the link to the number of publications for each listed medical condition over the last 5 years. These numbers are a reflection of the amount of research being done on these diseases</div>
+                        </div>
+                    </div>
+                    <div class="database-block" onclick="flipBlock(this)">
+                        <div class="database-block-inner">
+                            <div class="database-block-front">Classification</div>
+                            <div class="database-block-back">Lists each medical condition on the list as genetic vs non-genetic as well as one of 33 disease classifications as given on the Orphanet website</div>
+                        </div>
+                    </div>
+                    <div class="database-block" onclick="flipBlock(this)">
+                        <div class="database-block-inner">
+                            <div class="database-block-front">Inheritance</div>
+                            <div class="database-block-back">Transfer of genetic information from parents to offsprings that may lead to the child inheriting a genetic disease or condition</div>
+                        </div>
+                    </div>
+                    <div class="database-block" onclick="flipBlock(this)">
+                        <div class="database-block-inner">
+                            <div class="database-block-front">Approved Treatments</div>
+                            <div class="database-block-back">Names of approved treatments, as taken from the FDA list of approved orphan drugs, where available, for the listed medical conditions</div>
+                        </div>
+                    </div>
+                    <div class="database-block" onclick="flipBlock(this)">
+                        <div class="database-block-inner">
+                            <div class="database-block-front">Pipeline Drugs</div>
+                            <div class="database-block-back">Drugs under development, where available, for the listed medical conditions</div>
+                        </div>
+                    </div>
+                    <div class="database-block" onclick="flipBlock(this)">
+                        <div class="database-block-inner">
+                            <div class="database-block-front">Genetic Variation</div>
+                            <div class="database-block-back">Gives the type of genetic variation and details of the genes affected, where available</div>
+                        </div>
+                    </div>
+                    <div class="database-block" onclick="flipBlock(this)">
+                        <div class="database-block-inner">
+                            <div class="database-block-front">AI Insights</div>
+                            <div class="database-block-back">Uses AI and Large Language Models (LLMs) to enrich data by extracting updated insights from verified medical sources, providing users with contextual and real-time information.</div>
+                        </div>
+                    </div>
+                    <div class="database-block" onclick="flipBlock(this)">
+                        <div class="database-block-inner">
+                            <div class="database-block-front">Demographic Spread</div>
+                            <div class="database-block-back">
+                                Shows the most affected age groups, genders, and regions for each condition, extracted using LLM-based queries from verified medical sources.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="popular-resources" id="popular-resources">
+            <h3>Popular Resources</h3>
+            <ul>
+                <li><a href="https://www.orpha.net">Orphanet</a></li>
+                <li><a href="https://www.fda.gov">FDA</a></li>
+                <li><a href="https://globalgenes.org/orange-book">Orange Book</a></li>
+                <li><a href="https://www.uspto.gov">USPTO</a></li>
+                <li><a href="https://pubmed.ncbi.nlm.nih.gov">PubMed</a></li>
+                <li><a href="https://ncats.nih.gov/research/research-activities/rdcrn">RDCRN</a></li>
+                <li><a href="https://www.ncbi.nlm.nih.gov/medgen">MedGen</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="disease-count-block" id="disease-count-block">
+        Currently OrphanAtlas has data of <span id="disease-count">4066</span> Rare Diseases.
+    </div>
+
+    <div class="footer">
+        <div class="footer-left">
+            <a href="https://www.yu.edu/katz" target="_blank">
+                <img src="/static/b7dc4fdb-d3cd-4188-add9-2d5347eeac37.png" alt="Katz School Logo">
+            </a>
+            <div class="footer-text">
+                <div>205 Lexington Avenue, New York, NY 10016</div>
+            </div>
+        </div>
+        <div class="footer-right">
+            <div class="social-icons">
+                <a href="https://www.linkedin.com" target="_blank"><i class="fab fa-linkedin"></i></a>
+                <a href="https://www.instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+                <a href="https://www.youtube.com" target="_blank"><i class="fab fa-youtube"></i></a>
+                <a href="https://www.facebook.com" target="_blank"><i class="fab fa-facebook"></i></a>
+            </div>
+            <div class="contact-links">
+                <a href="tel:646-592-4753"><i class="fas fa-phone"></i> 646-592-4753</a>
+                <a href="mailto:info@katzschool.org"><i class="fas fa-envelope"></i> Email us</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Popup -->
+    <div id="devicePopup" class="popup-overlay">
+        <div class="popup-content">
+            <p>Hi there, we're currently Desktop compatible, but we'll be here soon. Wanna continue here?</p>
+            <button id="continueBtn" class="continue-btn">Continue</button>
+        </div>
+    </div>
+
+    <script>
+    function openForm(action) {
+        const url = "https://forms.gle/toQu4bcCNjTUf4858";
+        window.open(url, "_blank");
+    }
+</script>
+
+
+</body>
+</html>

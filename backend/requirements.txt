@@ -1,0 +1,8 @@
+flask==3.0.3
+flask-cors==4.0.0
+pandas==2.2.2
+openai==1.35.7
+fpdf==1.7.2
+gunicorn==22.0.0
+httpx==0.24.1
+openpyxl==3.1.5
