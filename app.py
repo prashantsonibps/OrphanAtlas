@@ -17,7 +17,9 @@ fetched_data = {}
 
 # OpenRouter API configuration for DeepSeek
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-deepseek_client = OpenAI(api_key=OPENROUTER_API_KEY, base_url="https://openrouter.ai/api/v1")
+deepseek_client = None
+if OPENROUTER_API_KEY:
+    deepseek_client = OpenAI(api_key=OPENROUTER_API_KEY, base_url="https://openrouter.ai/api/v1")
 
 def clean_text(text):
     """Remove hidden Unicode characters and normalize text."""
@@ -182,6 +184,8 @@ def fetch_data():
     query = request.json.get("query", "").strip().lower().replace("\n", " ")
 
     if sheet_name == "AI Generated Data":
+        if not deepseek_client:
+            return jsonify({"error": "AI features are disabled. OPENROUTER_API_KEY is not configured."}), 500
         prompt = f"Generate 10 concise lines of hypothetical data about the disease '{query.capitalize()}' " \
                  f"including prevalence, symptoms, treatments, or research insights. Format each line as a sentence."
         try:
@@ -261,6 +265,9 @@ def fetch_data_stream():
 
     if sheet_name != "AI Generated Data":
         return jsonify({"error": "Streaming only supported for AI Generated Data"}), 400
+    
+    if not deepseek_client:
+        return jsonify({"error": "AI features are disabled. OPENROUTER_API_KEY is not configured."}), 400
 
     prompt = f"Generate 10 concise lines of hypothetical data about the disease '{query.capitalize()}' " \
              f"including prevalence, symptoms, treatments, or research insights. Format each line as a sentence."
@@ -488,6 +495,9 @@ def download_pdf(query):
 
 @app.route("/ask_bot", methods=["POST"])
 def ask_bot():
+    if not deepseek_client:
+        return jsonify({"answer": "AI chatbot is currently disabled. Please set OPENROUTER_API_KEY to enable AI features."})
+    
     user_query = request.json.get("question", "").strip()
     if not user_query:
         return jsonify({"answer": "Please ask something about a rare disease."})
@@ -559,6 +569,9 @@ def get_disease_count():
 @app.route("/get_geographic_spread", methods=["POST"])
 def get_geographic_spread():
     """Returns a JSON list of predicted countries where the disease is most common, generated via DeepSeek model."""
+    if not deepseek_client:
+        return jsonify({"error": "AI features are disabled. OPENROUTER_API_KEY is not configured.", "locations": []})
+    
     try:
         query = request.json.get("query", "").strip()
         prompt = f"List 10 countries where the disease '{query}' is most commonly found based on prevalence. Respond only with the country names separated by commas."
